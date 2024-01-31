@@ -208,6 +208,8 @@ Meno učiteľa
 nie je v tretej normálne forme, pretože meno učiteľa je závislé od čísla učiteľa. Prevod by opäť pozostával z dekompozície
 
 #### Indexování
+Index je dátová štruktúra, ktorá poskytuje mechanizmus rýchleho vyhľadávania na nájdenie konkrétnych riadkov v tabuľke na základe hodnôt v jednom alebo viacerých stĺpcoch. Vytváraním indexov môžu databázy výrazne zlepšiť efektivitu operácií vyhľadávania, filtrovania a triedenia.
+
 Zvyšuje rýchlosť získavania údajov vytváraním indexov v stĺpcoch.
 Index slouží ke zrychlení/zefektivnění častých dotazů nad tabulkou. Dotazy obsahující zvolený sloupec (či jejich kombinaci) budou rychlejší.
 
