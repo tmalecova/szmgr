@@ -275,6 +275,17 @@ Některé algoritmy umožňují obnovu dat na základě podpisu (v podpisu jsou 
 - Nejprve proběhne iniciální handshake (autentizace pomocí asymetrické kryptografie). Následně se stanoví symetrický kryptografický klíč, kterým je šifrována celá komunikace.
 - je mezi TCP a aplikací, TLS nevidí do přenášených dat
 
+Flow:
+1. Client Hello - klient pošle serveru najvyssiu podporovanu TLS verziu, random cislo, podporovane kryptograficke algoritmy a iné.
+2. Server Hello - server odpovie klientovi tiež najvyssou podporovanou TLS verziou, random cislom, vybranym kryptografickym algoritmom a inymi.
+3. Server Certificate - server pošle klientovi svoj certifikat -> obsahujuci public key.
+4. Client Key Exchange - klient vygeneruje premennu, ktoru zasifruje public keyom servera a pošle ju serveru - pre master secret - server si ju desifruje a tym padom obe strany vlastnia rovnaky pre master secret a vytvoria z neho master secret (pre-master key + random cislo klienta + random cislo servera + "master secret" / "key expansion" stringy) -> vzniknú aspoň 4 kľúče pre každú stranu (obe strany ich vlastnia - dokopy ich je 8) - session keys vygenerované z master key == 2 kľúče na šifrovanie (client/server encryption key) a 2 kľúče na overovanie správnosti správ (client/server HMAC key), lebo TLS vytvára 2 separátne tunely pre komunikáciu (jeden pre komunikáciu od klienta k serveru a druhý opačne).
+5. Change Cipher Spec - klient pošle serveru správu, že odteraz bude používať nový kľúč na šifrovanie a overovanie správnosti správ.
+7. Change Cipher Spec - server pošle klientovi správu, že odteraz bude používať nový kľúč na šifrovanie a overovanie správnosti správ.
+8. Finished - server pošle klientovi správu, ktorá obsahuje overenie, že klient aj server vlastnia rovnaký master secret a tým pádom aj session keys.
+9. Application Data - odteraz môžu obidve strany začať posielat data šifrované session keys == symetrické šifrovanie.
+
+
 **IPSec** - na síťové vrstvě, přidán do IPv4, v IPv6 už je defaultně
 - pro každý IP datagram
     - zajišťuje autentizaci odesilatele (IP hlavičky (vyjma měněných dat, e.g. TTL) a data, přidá tajný klíč, hash uloží do autentizační hlavičky)
