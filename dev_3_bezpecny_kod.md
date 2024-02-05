@@ -310,6 +310,24 @@ Flow:
     - příslušnost ke skupinám, rolím, povolené operace
     ...
 
+**Kerberos**
+- autentizační protokol, ktorý umožňuje bezpečnú autentizáciu pre klientov a servery, čo používateľom umožňuje bezpečný prístup k sieťovým službám bez prenosu ich hesiel v odhalenej forme
+- využíva symetrickú kryptografiu
+- skladá sa z 3 hlavných komponentov: Key Distribution Center (KDC) = Authentication Server (AS) + Ticket Granting Server (TGS)
+- flow:
+1. Autentizácia
+- používateľ chce pristupovať k službe -> predloží svoje prihlasovacie údaje (zvyčajne používateľské meno a heslo) AS.
+- AS overí permissions, vygeneruje random **session key** a vytvorí **TGT** obsahujúci identitu používateľa, časovú pečiatku a session key zašifrovaný tajným kľúčom používateľa
+- TGT sa potom odošle späť používateľovi
+2. Service Ticket Request
+- používateľ chce získať prístup ku konkrétnej službe -> predloží TGT TGS spolu so žiadosťou o službu
+- TGS overí TGT a vydá servis ticket na požadovanú službu - service ticket obsahuje identitu užívateľa, časovú pečiatku a session key pre službu, zašifrovaný tajným kľúčom služby.
+- service ticket sa odošle späť používateľovi
+3. Service Authentication
+- používateľ predloží servis ticket službe, ku ktorej chce pristupovať
+- služba dešifruje servisný lístok pomocou svojho tajného kľúča, overí identitu používateľa a extrahuje session key
+- používateľ aj služba teraz zdieľajú rovnaký session key, ktorý sa používa na zabezpečenú komunikáciu
+
 ## Zásady a principy bezpečného kódu.
 
 **Defensive programming** 
@@ -344,7 +362,11 @@ Typické chyby
     - e.g. SQL injection
 - absence logování/monitirování
 - **Race condition** - simultánní zápisy (nebo zápis a čtení) do sdílené paměti (ze stejného paměťového místa, ale i třeba ze dvou různých logicky závislých míst) - řešením je sekvenční zpracování nebo zamykání
-- **Buffer overflow** - v paměti máme pole a za ním data. Pokud provedeme zápis do pole a zapisovaná data jsou delší než pole (a neohlídáme si délku), mohou nám zapisovaná data přepsat i data za polem. Ovlivňuje hlavně C/C++.
+- **Buffer overflow** 
+  - v paměti máme pole a za ním data. Pokud provedeme zápis do pole a zapisovaná data jsou delší než pole (a neohlídáme si délku), mohou nám zapisovaná data přepsat i data za polem. Ovlivňuje hlavně C/C++.
+  - Ak môže útočník kontrolovať zapisované údaje za hranicami vyrovnávacej pamäte, môže strategicky vytvoriť preplnený obsah, aby manipuloval so správaním programu. Napríklad: 
+    - Prepísanie návratových adries: Prepísaním návratovej adresy funkcie môže útočník presmerovať spustenie programu na iné miesto kódu, ktoré môže potenciálne ovládať útočník.
+    - Vloženie kódu Shell: Škodlivý kód, známy ako kód shellu, možno vložiť do pretečenej vyrovnávacej pamäte. Ak sa tento kód spustí, môže útočníkovi poskytnúť neoprávnený prístup alebo kontrolu nad systémom.
 - **Buffer overread** - jako buffer overflow, ale se čtením - jsme schopní číst i data za polem
 - použití neinicializované paměti (po malloc), nebo uvolněného ukazatele (po free)
 - **Stack exhaustion** - vyplýtvání místa na zásobníku, typicky kvůli velké rekurzi
@@ -394,8 +416,6 @@ Pro **ošetřování vstupů** je vhodný použít fail-fast přístup. Jakmile 
 - Pro jednoduché zpracování sekvence vstupů (příkazů) je vhodné použít **automata-based modelling**
     - v ideálním případě se chceme nutnosti udržovat stav mezi příkazy vyhnout, bezstavová komunikace je méně náchylná na chyby a je možné systém jednoduššeji škálovat
 - důležité je samozřejmě nikdy nevěřit uživatelským vstupům
-
-**Souběžnost**
 
 ## Detekce bezpečnostních zranitelností, penetrační testování.
 
