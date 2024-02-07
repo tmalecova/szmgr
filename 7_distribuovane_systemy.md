@@ -3,6 +3,102 @@
 
 ## Základní pojmy, principy
 
+### Distribuovaný systém
+- DS je kolekcia nezávislých uzlov/výpočetných jednotiek, ktoré spolupracujú na dosiahnutí spoločného cieľa. 
+- Uzly sú prepojené počítačovou sieťou, cez ktorú komunikujú a koordinujú medzi sebou tasky na poskytnutie nejakej unifikovanej služby. 
+- DS sú navrhnuté pre lepšiu performance, spoľahlivosť a škálovateľnosť na základe distribuovania taskov medzi rôznymi mašinami
+- architektúry DS - client-server, P2P, component-based, SOA, microservice
+- napr. cloud platform, P2P siete, CDN, distribuované databáze
+
+### Middleware
+- middleware je software vystupujúci ako medzivrstva medzi jednolivými komponentami DS
+- jeho cieľom je zjednodušenie a zefektívnenie komunukácie a koordinácie jednotlivých uzlov DS
+- napr. message queueing system ako RabbitMQ, Remote Procedure Call - CORBA (Common Object Request Broker Architecture)
+
+## Rozdíl mezi centralizovanou a distribuovanou architekturou systému, nevýhody obojího a jejich překonávání. 
+### Centralizovaná architektúra
+- celý systém (dáta aj funkcionalita) sa nachádza na jednom stroji
+- (+) lahšia správa systému
+- (-) single point of failure -> môžeme vytvoriť repliky (záložné servery), ktoré budú schopné zastúpiť zlyhaný server
+- (-) vysoká previazanosť == nízka flexibilita -> dôraz na kvalitu
+
+### Distribuovaná architektúra
+- systém sa skladá z viacerých častí, ktoré sa nachádzajú nezávisle na rôznych strojoch
+- (+) lepšia škálovateľnosť -> naškálujem len časť ktorá to potrebuje
+- (+) no single point of failure == zlyhaná časť systému neznamená automaticky zlyhanie celého systému
+- (-) ťažšie spravovanie a synchronizácia == väčšia komplexita -> treba čo najlepšie navrhnúť architektúru a využitie vhodných nástrojov, ako napr. RabbitMQ/Kafka
+
+Zaistenie konzistentnosti a integrity v DS je ťažká úloha a preto namiesto dodržiavania ACID princípov sa prechádza na BASE:
+- **Basically Available** = aj v prípade nefunkčnosti časti systému zostáva zvyšok systému dostupný a funkčný
+- **Soft state** = stav systému môže byť DOČASNE nekonzistentný medzi jednotlivými uzlami
+- **Eventually consistent** = systém po čase dosiahne konzistentného stavu, ak sa nevyskytnú nové aktualizácie -> dosiahnutie silnej konzistencie v DS v reálnom čase je často nepraktické
+
+
+## Replikace, sdílení dat
+- v DS kde sú jednotlivé komponenty systému rozmiestnené nezávisle po sieti je potrebné zaistiť zdieľanie dát ak potrebujú jednotlivé komponenty k nim pristupovať == spolupráca a koordinácia medzi distribuovanými uzlami
+  - treba zabezpečiť:
+    - bezpečnosť == riadenie prístupu, 
+    - konzistentnosť (súbežný prístup je problém) == uzamykanie,dist. tranzakcie apod.,
+    
+- replikácia je potrebná aj pre zaistenie rýchlej dostupnosti dát, zvýšenie odolnosti systému (ak mi padne server, mám niekde zálohu) voči výpadkom/chybám, či zlepšenie výkonu
+  - *úplná* = všetky dáta sa replikujú do všetkých uzlov
+  - *čiastočná* = všetkým len časť dát na základe nejakých kritérii
+  - *selektívna* = časť dát sa selektívne replikuje niektorým uzlom
+- pri replikácii treba riešiť **konzistentnosť** -> zmena dát v jednom uzle sa musí premietnuť aj do ostatných replík == **synchronizácia**
+- **master-slave replikácia** - master uzol zabezpečuje aktualizáciu slave (tí poskytujú len čítanie)
+- **P2P replikácia** - každý uzol číta aj zapisuje a následne aktualizuje
+
+- **sharding** = na rôzne uzly sú umiestnené rôzne časti údajov
+
+##  Architektura orientovaná na služby (SOA), webové služby
+- SOA je architektúra skladajúca sa z niekoľkých služieb (cca 4-12), ktoré sú nezávisle od seba nasadené/škálované a komunikujú medzi sebou prostredníctvom dobre definovaných rozhraní == ľahké previazanie (loosely coupled) 
+- pre komunikáciu môžu využívať architektonické štýly ako SOAP alebo REST (microservisy len REST), ale môžu využívať aj iné mechanizmy
+- zvyčajne synchrónna komunikácia cez sieť (microservisy asynchronna/event-driven)
+- zvyčajne využívajú spoločnú DB (microservisy majú vlastné)
+- tímy pracujú nezávisle na službách avšak môže sa objaviť nejaké prepojenie a výzvy koordinácie (microservisy nemajú)
+
+
+- *webová služba* je typ služby, ktorá sa riadi princípmi SOA, ale komunikuje pomocou štandardizovaných štýlov ako SOAP/REST cez HTTP, teda komunikuje spôsobom typickým pre komunikáciu cez web
+- pre popis služieb aké ponúka iným aplikáciam cez web poskytuje ja **WSDL**(Web Services Description Language) pre SOAP / **OpenAPI specification** pre REST
+- v týchto dokumentáciach definuje popis a spôsob volania služieb, ktoré poskutyje - aké parametre, aké typy, aký výsledok očakávať
+
+### SOAP - Simple Object Access Protocol
+- serializácia dát - XML - prenos dát medzi službami
+- stavová aj bezstavová komunikácia
+- nezávislý na transporte (REST využíva len HTTP)
+- pevne daná štruktúra - envelope -> header + body
+- umožnuje 1 správu cieliť viacerým príjemcom
+- použitie - enterprise systémy = SOAP document alebo sa dá využiť aj pre RPC
+
+### REST - REpresentational State Transfer
+- serializácia dát - XML alebo JSON
+- len bezstavová komunikácia cez HTTP == request obsahuje všetko čo treba pre jeho vyhodnotenie a vrátenie výsledku a teda netreba si uchovávať žiadny stav z predošlej komunikácie
+- zaobchádza s dátami ako so **zdrojmi** 
+  - každý zdroj je unikátne identifikovateľný = URI (Uniform Resource Identifier)
+  - s každým zdrojom sa zaobchádza unifikovane (jednotné rozhranie) prostredníctvom HTTP metód (GET/POST/PUT/DELETE)
+- použitie - vývoj API -> škálovateľnosť, výkon a jednoduchosť kvôli HTTP
+
+
+## Příklady existujících technologií a jejich využití
+- vyššie spomenuté SOAP + REST pre web služby
+
+### RPC - Remote Procedure Call
+- využíva sa pri komunikácii v DS medzi jednotlivými uzlami, kedy jeden uzol (client) volá procedúru/funkciu ako lokálnu, avšak pre vykonanie danej funkcie je potrebné kontaktovať iný uzol (server), ktorý vlastní implementáciu danej funkcie
+- z pohľadu klienta to vyzerá, že daná procedúra/funkcia je lokálna 
+- rozhranie, ktoré klient aj server vlastnia je definované prostredníctvom IDL - Interface Definition Language
+
+### CORBA - Common Object Request Broker Architecture
+- architektúra pre komunikáciu medzi uzlami DS, kde jeden uzol zaobchádza s objektom ako s lokálnym, ale ten sa nachádza na inom vzdialenom uzle
+- je potreba:
+1. definícia rozhrania cez IDL
+2. generovanie kódu na základe rozhrania pre ďalšiu komunikáciu s objektmi
+3. ORB - sprostredkovateľ objektov medzi klientom a serverom = odosiela požiadavky, volá metód a spracovanie výsledkov
+4. vzdialené volanie metôd = RPC -> klient používa STUB (proxy) objektu
+5. CORBA sa postará o (de)serializáciu dát pre prenos cez sieť
+
+---
+ 
+## Základní pojmy, principy
 **Distribuovaný systém** se skládá z komponentů (počítačů) propojených komunikační sítí. Distribuované systémy řeší problémy (výpočty/zpracovávání requestů) spoluprací jednotlivých komponentů (každý dělá něco). Díky tomu se systém snadněji škáluje (posilujeme subsystém, který má problémy).
 
 Architektury popsány v [otázce 1](./1_programovani_a_softwarovy_vyvoj.md#základní-koncepty-softwarových-architektur-z-pohledu-implementace-vícevrstvá-architektura-moderních-informačních-systémů-architektura-model-view-controller), takže jen shrnutí
