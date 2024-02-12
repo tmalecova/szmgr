@@ -217,14 +217,30 @@ Index slouží ke zrychlení/zefektivnění častých dotazů nad tabulkou. Dota
 CREATE INDEX my_index ON Products (Price)
 ```
 
+Dva základní typy indexů:
+- **Řazené indexy** – vyhledávací klíče jsou uspořádané
+- **Hešovací indexy** – vyhledávací klíče jsou rovnoměrně rozprostřeny po
+adresovacím prostoru hešovací funkce
+
 Pro indexy se mohou používat 
-- **tradiční indexy** - jako v knihách, odkazy na řádky s danou hodnotou, je možné dělat více úrovní indexů, používat různá indexová uspořádání...
-- **haše** - pro získání jednoduché hodnoty velkých dat
-- **B+ stromy** - každý uzel obsahuje odkazy na uzly níže, nebo hodnoty (jedná se o listový uzel). Hodnoty jsou v listech vzestupně uspořádány, uzly v sobě mají i informace o intervalech daných odkazů/hodnot, listy jsou provázané.
+1. konvenčné indexy
+- **hustý index** – pro každý záznam v tabulce je vytvořen záznam v indexu
+- **řídký index** – pro každý blok v tabulce je vytvořen záznam v indexu -> pre nájdenie záznamu K je potrebné najprv nájsť indexový záznam s největším vyhledávacím klíčem menším než K a potom v ňom vyhľadať záznam
+
+tradiční indexy jako v knihách, odkazy na řádky s danou hodnotou, je možné dělat více úrovní indexů, používat různá indexová uspořádání...
+2. indexy s usporiadaním (např. B-stromy)
+- **B+ stromy** - najcastejsie - každý uzel obsahuje odkazy na uzly níže, nebo hodnoty (jedná se o listový uzel). Hodnoty jsou v listech vzestupně uspořádány, uzly v sobě mají i informace o intervalech daných odkazů/hodnot, listy jsou provázané.
     ![](img/20230526220652.png)
 - **R stromy** - podobné jako B+, ale jsou vícedimenzionální, ve 2D fungují jako obdélníky. Data jsou v listových uzlech stromu. Rodič uzlu zahrnuje všechny své potomky (ve 2D jde o větší obdélník, který obsahuje potomky). Ideální je, aby zabíraly rodičovské obdélníky co nejméně prostoru - rodič totiž jako index redukuje oblast nutnou k prohledání (říká *hledej ve mně!*).
     ![](img/20230526220927.png)
     ![](img/20230611232516.png)
+3. bitové indexy 
+Pokud je počet unikátních hodnot odkazovaného atributu malý, může se sestavit bitový
+vektor pro každou hodnotu a postavit index z těchto vektorů > matice bitů.
+
+3. hašovací indexy
+Pro získání jednoduché hodnoty velkých dat -> Transformace klíče na adresu za pomoci hashovací funkce.
+
 
 #### Hašování
 
@@ -241,6 +257,18 @@ Pro různé účely používáme různé algoritmy, jde o balanc rychlosti (u he
 - rodina Secure Hashing Algorithm, za bezpečnou se aktuálně považuje **SHA-2** (SHA256, SHA512, SHA-384...)
 - **Argon2** - v současnosti doporučovaný pro hašování hesel
 - hašem (hloupým, ale rychlým) může být třeba i délka vstupu, modulo, součet ascii hodnot znaků... (nazývá se [Cyclic redundancy check](./dev_3_bezpecny_kod.md#notes))
+
+Hashovanie sa používa aj pre indexovanie -> **hashovacie indexy**.
+1. **statické hashovanie**
+- hešovací index organizuje vyhledávací klíče spolu s ukazateli na záznamy v hešovací souborové organizaci
+- hesovaci souborova organizace využíva buckets (kybliky) ako základní úložnou jednotkou obsahující jeden nebo více záznamů
+- V hešovací souborové organizaci získáme kyblík, kde je hledaný záznam uložen, přímo z jeho vyhledávacího klíče pomocí hešovací funkce
+- (-) Ve statickém hešování mapuje hešovací funkce vyhledávací klíče na pevnou množinu adres kyblíků.
+
+2. **dynamické hashovanie**
+- Vhodné pro databáze, které mění svoji velikost
+- Umožňuje modifikovat hešovací funkci
+- Rozšiřitelné hešování
 
 ### Zálohovanie a obnova:
 **Dôležitosť:** Pravidelné zálohovanie zaisťuje obnovu dát v prípade zlyhania systému alebo poškodenia dát.\
